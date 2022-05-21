@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic; 
+using System.Threading.Tasks; 
 
 namespace MultiThreadedApp
 {
@@ -14,12 +15,13 @@ namespace MultiThreadedApp
             Program program = new Program();
             List<NumberAverager> processedAverager = new(); 
             ProgramHelpers prg = new(5); 
-            Random rand = new Random();
-            prg.ThresholdReached += program.Prg_ThresholdReached; 
+            Random rand = new Random(1551);
+            prg.ThresholdReached += program.Prg_ThresholdNonAsync; 
             int i = 0; 
             while(i < 100)
             {
-                prg.AddValueToQueue(ValueGenerator.CreateValue(5, rand)); 
+                prg.AddValueToQueue(ValueGenerator.CreateValue(5, rand));
+                if (i % 5 == 0) Console.WriteLine("fifth val generated"); 
                 i++; 
             }
             Console.WriteLine(); 
@@ -29,19 +31,29 @@ namespace MultiThreadedApp
                 Console.WriteLine(nAvg.Average.ToString());
             } 
         }
-        private void Prg_ThresholdReached(object? sender, ThresholdReachedEventArgs e)
+        private async void Prg_ThresholdReached(object? sender, ThresholdReachedEventArgs e)
         {
-            ProcessedData.Add(new NumberAverager(e.Data)); 
+            var t = Task.Run(() =>
+            {
+                ProcessedData.Add(new NumberAverager(e.Data));
+            });
+            await Task.Yield();
+            await t;
+            Console.WriteLine("Scan averaged!");
         }
-
+        private void Prg_ThresholdNonAsync(object? sender, ThresholdReachedEventArgs e)
+        {
+            ProcessedData.Add(new NumberAverager(e.Data));
+            Console.WriteLine("Scan averaged!"); 
+        }
     }
     public static class ValueGenerator
     {
         public static double CreateValue(int millisecondDelay, Random rnd)
         {
-            Thread.Sleep(millisecondDelay);
+            //Thread.Sleep(millisecondDelay);
             double value = rnd.NextDouble(); 
-            Console.WriteLine(value.ToString());
+            //Console.WriteLine(value.ToString());
             return value; 
         }
     }

@@ -19,12 +19,7 @@ namespace MultiThreadedApp
         }
         protected virtual void OnThresholdReached(ThresholdReachedEventArgs e)
         {
-            EventHandler<ThresholdReachedEventArgs>? handler = ThresholdReached; 
-            if(handler != null)
-            {
-                handler(this, e); 
-            }
-            
+            ThresholdReached?.Invoke(this, e);
         }
         public void AddValueToQueue(double value)
         {
